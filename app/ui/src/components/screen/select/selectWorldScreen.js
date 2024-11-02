@@ -319,18 +319,18 @@ export class SelectWorldScreen extends BaseScreen {
         return (
             <div className={"maincol"}>
                 <div className="topbar">
-                    <h1>Select World</h1>
-                    <h2>Select your world folder or archive.</h2>
+                    <h1>选择世界</h1>
+                    <h2>选择您的世界文件夹或存档。</h2>
                 </div>
                 {!this.state.selected && !this.state.dragging &&
                     <div className="main_content select_world">
                         <button onClick={this.showFolderBrowser} className="gray_box">
-                            Choose world folder
-                            <span>Select the world folder, we'll do the rest</span>
+                            选择世界文件夹
+                            <span>选择世界文件夹，我们会处理其余的</span>
                         </button>
                         <button onClick={this.showFileBrowser} className="gray_box">
-                            Select archive
-                            <span>Supported types: .zip, .mcworld</span>
+                            选择存档
+                            <span>支持的类型：.zip, .mcworld</span>
                         </button>
                     </div>
                 }
@@ -339,24 +339,24 @@ export class SelectWorldScreen extends BaseScreen {
                         <button
                             className={"gray_box drag_box" + (this.state.draggingOverBox ? " dragged_over" : "")}
                             onDrop={this.onDrop} onDragOver={this.onDragBoxOver} onDragLeave={this.onDragBoxStop}>
-                            Drop your worlds here!
-                            <span>Supported types: .zip, .mcworld and directories</span>
+                            将您的世界拖放到此处！
+                            <span>支持的类型：.zip, .mcworld 和目录</span>
                         </button>
                     </div>
                 }
                 {this.state.selected && this.state.processing &&
                     <div className="main_content main_content_progress">
-                        <h3>Preparing World: <span>{Round2DP(this.state.processingPercentage)}%</span></h3>
+                        <h3>准备世界：<span>{Round2DP(this.state.processingPercentage)}%</span></h3>
                         <div className="progress_bar">
                             <div className="progress_fill" style={{width: this.state.processingPercentage + "%"}}/>
                         </div>
-                        <p>Please wait while we prepare your world to be prepared. This won't take too long...</p>
+                        <p>请稍候，我们正在准备您的世界。这不会太久...</p>
                     </div>
                 }
                 {this.state.selected && !this.state.processing && !this.state.detecting &&
                     <div className="main_content main_content_progress">
-                        <h3>World Selected</h3>
-                        <p>Your world <span className="world_name">{this.state.selected}</span> is ready to be loaded.
+                        <h3>世界已选择</h3>
+                        <p>您的世界 <span className="world_name">{this.state.selected}</span> 已准备好加载。
                         </p>
                     </div>
                 }
@@ -364,26 +364,26 @@ export class SelectWorldScreen extends BaseScreen {
                     <div className="main_content main_content_progress">
 
                         {!this.state.animated &&
-                            <h3>Preparing World: <span>{Round2DP(this.state.progress)}%</span></h3>}
-                        {this.state.animated && <h3>Detecting world version</h3>}
+                            <h3>准备世界：<span>{Round2DP(this.state.progress)}%</span></h3>}
+                        {this.state.animated && <h3>检测世界版本</h3>}
                         <div className={this.state.animated ? "progress_bar animated" : "progress_bar"}>
                             {!this.state.animated &&
                                 <div className="progress_fill" style={{width: this.state.progress + "%"}}/>}
                         </div>
-                        {!this.state.animated && <p>Please wait while we prepare your world.</p>}
+                        {!this.state.animated && <p>请稍候，我们正在准备您的世界。</p>}
                         {this.state.animated &&
-                            <p>Please wait while we work out what version of Minecraft this world is.</p>}
+                            <p>请稍候，我们正在确定此世界的Minecraft版本。</p>}
                         <p>{this.joke}</p>
                     </div>
                 }
                 <div className="bottombar">
                     {this.state.selected && !this.state.processing && !this.state.detecting &&
-                        <button className="button red" onClick={this.cancel}>Cancel</button>
+                        <button className="button red" onClick={this.cancel}>取消</button>
                     }
                     <button
                         className="button green"
                         disabled={this.state.detecting || !this.state.selected || this.state.processing}
-                        onClick={this.startSession}>Start
+                        onClick={this.startSession}>开始
                     </button>
                 </div>
             </div>
