@@ -96,7 +96,7 @@ public class BedrockSkullBlockEntityHandler extends BlockEntityHandler<BedrockRe
 
     @Override
     public SkullBlockEntity updateBeforeWrite(@NotNull BedrockResolvers resolvers, CompoundTag itemCompoundTag, ChunkerItemStack chunkerItemStack, SkullBlockEntity blockEntity) {
-        return null;
+        return new BedrockSkullBlockEntity(blockEntity);
     }
 
     @Override
@@ -122,7 +122,9 @@ public class BedrockSkullBlockEntityHandler extends BlockEntityHandler<BedrockRe
             Map<BlockState<?>, BlockStateValue> newBlockStates = new Object2ObjectOpenHashMap<>(blockIdentifier.getPresentStates());
             if (!wallSkull) {
                 // Apply rotation
-                newBlockStates.put(VanillaBlockStates.ROTATION, Rotation.class.getEnumConstants()[bedrockSkullBlockEntity.getRotation()]);
+                Rotation[] constants = Rotation.class.getEnumConstants();
+                int normalizedRotation = (((bedrockSkullBlockEntity.getRotation() % constants.length) + constants.length) % constants.length);
+                newBlockStates.put(VanillaBlockStates.ROTATION, constants[normalizedRotation]);
             }
 
             // Apply powered

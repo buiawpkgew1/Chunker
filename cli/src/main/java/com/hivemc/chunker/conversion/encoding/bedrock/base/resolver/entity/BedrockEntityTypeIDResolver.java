@@ -1,6 +1,7 @@
 package com.hivemc.chunker.conversion.encoding.bedrock.base.resolver.entity;
 
 import com.hivemc.chunker.conversion.encoding.base.Version;
+import com.hivemc.chunker.conversion.intermediate.column.entity.type.ChunkerEntityType;
 import com.hivemc.chunker.conversion.intermediate.column.entity.type.ChunkerVanillaEntityType;
 import com.hivemc.chunker.resolver.Resolver;
 import com.hivemc.chunker.util.InvertibleMap;
@@ -10,7 +11,7 @@ import java.util.Optional;
 /**
  * Entity Type ID resolver, used for Bedrock
  */
-public class BedrockEntityTypeIDResolver implements Resolver<Integer, ChunkerVanillaEntityType> {
+public class BedrockEntityTypeIDResolver implements Resolver<Integer, ChunkerEntityType> {
     private final InvertibleMap<ChunkerVanillaEntityType, Integer> mapping = InvertibleMap.enumKeys(ChunkerVanillaEntityType.class);
 
     /**
@@ -175,23 +176,38 @@ public class BedrockEntityTypeIDResolver implements Resolver<Integer, ChunkerVan
         if (bedrockVersion.isGreaterThanOrEqual(1, 19, 70)) {
             mapping.put(ChunkerVanillaEntityType.SNIFFER, 139);
         }
-
-        if (bedrockVersion.isGreaterThanOrEqual(1, 19, 80)) {
+        if (bedrockVersion.isGreaterThanOrEqual(1, 20, 60)) {
             mapping.put(ChunkerVanillaEntityType.BREEZE, 140);
             mapping.put(ChunkerVanillaEntityType.BREEZE_WIND_CHARGE_PROJECTILE, 141);
             mapping.put(ChunkerVanillaEntityType.ARMADILLO, 142);
+        }
+        if (bedrockVersion.isGreaterThanOrEqual(1, 20, 70)) {
             mapping.put(ChunkerVanillaEntityType.WIND_CHARGE, 143);
             mapping.put(ChunkerVanillaEntityType.BOGGED, 144);
+        }
+        if (bedrockVersion.isGreaterThanOrEqual(1, 21, 0)) {
+            mapping.put(ChunkerVanillaEntityType.OMINOUS_ITEM_SPAWNER, 145);
+        }
+        if (bedrockVersion.isGreaterThanOrEqual(1, 21, 50)) {
+            mapping.put(ChunkerVanillaEntityType.CREAKING, 146);
+        }
+        if (bedrockVersion.isGreaterThanOrEqual(1, 21, 80)) {
+            mapping.put(ChunkerVanillaEntityType.HAPPY_GHAST, 147);
         }
     }
 
     @Override
-    public Optional<Integer> from(ChunkerVanillaEntityType input) {
-        return Optional.ofNullable(mapping.forward().get(input));
+    public Optional<Integer> from(ChunkerEntityType input) {
+        if (input instanceof ChunkerVanillaEntityType chunkerVanillaEntityType) {
+            return Optional.ofNullable(mapping.forward().get(chunkerVanillaEntityType));
+        } else {
+            // No possible mapping
+            return Optional.empty();
+        }
     }
 
     @Override
-    public Optional<ChunkerVanillaEntityType> to(Integer input) {
+    public Optional<ChunkerEntityType> to(Integer input) {
         return Optional.ofNullable(mapping.inverse().get(input));
     }
 }

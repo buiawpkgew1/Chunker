@@ -35,7 +35,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@d156388eb19639ec20ade50009f3d199ce1e2808 # v4
+        uses: gradle/actions/setup-gradle@8379f6a1328ee0e06e2bb424dadb7b159856a326 # v4
 
       - name: Mark Gradle as Executable
         run: chmod +x gradlew
@@ -71,13 +71,14 @@ jobs:
           distribution: 'temurin'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@d156388eb19639ec20ade50009f3d199ce1e2808 # v4
+        uses: gradle/actions/setup-gradle@8379f6a1328ee0e06e2bb424dadb7b159856a326 # v4
 
       - name: Build with Gradle Wrapper
         run: ./gradlew build -x test
 
-      - name: Sign files with Trusted Signing
-        uses: azure/trusted-signing-action@v0.4.0
+      - name: Sign exe with Trusted Signing
+        uses: azure/trusted-signing-action@v0.5.1
+        if: github.repository == 'HiveGamesOSS/Chunker'
         with:
           azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
@@ -91,6 +92,22 @@ jobs:
           timestamp-rfc3161: http://timestamp.acs.microsoft.com
           timestamp-digest: SHA256
 
+      - name: Sign unpacked with Trusted Signing
+        uses: azure/trusted-signing-action@v0.5.1
+        if: github.repository == 'HiveGamesOSS/Chunker'
+        with:
+          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          azure-client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+          endpoint: https://weu.codesigning.azure.net/
+          trusted-signing-account-name: hivegames
+          certificate-profile-name: Chunker
+          files-folder: build/libs/windows/win-unpacked/
+          files-folder-filter: exe
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -98,7 +115,10 @@ jobs:
           path: build/libs/windows/
 
   build_mac:
-    runs-on: macos-latest
+    strategy:
+      matrix:
+        os: [macos-latest, macos-13]
+    runs-on: ${{ matrix.os }}
     if: github.event.inputs.build_mac == 'true'
     steps:
       - uses: actions/checkout@v4
@@ -113,7 +133,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@d156388eb19639ec20ade50009f3d199ce1e2808 # v4
+        uses: gradle/actions/setup-gradle@8379f6a1328ee0e06e2bb424dadb7b159856a326 # v4
 
       - name: Mark Gradle as Executable
         run: chmod +x gradlew
@@ -124,5 +144,5 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: macos-builds
+          name: macos-builds-${{ matrix.os }}
           path: build/libs/mac/

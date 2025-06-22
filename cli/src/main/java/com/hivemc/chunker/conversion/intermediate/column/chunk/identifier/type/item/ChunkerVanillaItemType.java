@@ -175,6 +175,8 @@ public enum ChunkerVanillaItemType implements ChunkerItemType {
     BOOK,
     SLIME_BALL,
     EGG,
+    BLUE_EGG,
+    BROWN_EGG,
     COMPASS,
     LODESTONE_COMPASS,
     RECOVERY_COMPASS,
@@ -343,6 +345,7 @@ public enum ChunkerVanillaItemType implements ChunkerItemType {
     MUSIC_DISC_CREATOR,
     MUSIC_DISC_CREATOR_MUSIC_BOX,
     MUSIC_DISC_PRECIPICE,
+    MUSIC_DISC_TEARS,
     DISC_FRAGMENT_5,
     TRIDENT,
     PHANTOM_MEMBRANE,
@@ -414,7 +417,24 @@ public enum ChunkerVanillaItemType implements ChunkerItemType {
     OMINOUS_BOTTLE,
     WIND_CHARGE,
     BREEZE_ROD,
-    MACE;
+    MACE,
+    RESIN_BRICK,
+    BLACK_HARNESS,
+    BLUE_HARNESS,
+    BROWN_HARNESS,
+    CYAN_HARNESS,
+    GRAY_HARNESS,
+    GREEN_HARNESS,
+    LIGHT_BLUE_HARNESS,
+    LIGHT_GRAY_HARNESS,
+    LIME_HARNESS,
+    MAGENTA_HARNESS,
+    ORANGE_HARNESS,
+    PINK_HARNESS,
+    PURPLE_HARNESS,
+    RED_HARNESS,
+    WHITE_HARNESS,
+    YELLOW_HARNESS;
 
     private final Class<? extends BlockEntity> blockEntityClass;
 

@@ -34,6 +34,7 @@ import com.hivemc.chunker.conversion.intermediate.column.chunk.itemstack.trim.Ch
 import com.hivemc.chunker.conversion.intermediate.column.chunk.itemstack.trim.ChunkerTrimPattern;
 import com.hivemc.chunker.conversion.intermediate.column.entity.Entity;
 import com.hivemc.chunker.conversion.intermediate.column.entity.PaintingEntity;
+import com.hivemc.chunker.conversion.intermediate.column.entity.type.ChunkerEntityType;
 import com.hivemc.chunker.conversion.intermediate.column.entity.type.ChunkerVanillaEntityType;
 import com.hivemc.chunker.conversion.intermediate.level.ChunkerLevel;
 import com.hivemc.chunker.conversion.intermediate.level.map.ChunkerMap;
@@ -65,7 +66,6 @@ public class JavaBasicComponentItemResolverTests {
     public static final Map<Class<? extends Enum<?>>, Set<?>> UNSUPPORTED_ENUMS = Map.of(
             ChunkerVanillaEntityType.class, Set.of(
                     ChunkerVanillaEntityType.ELDER_GUARDIAN_GHOST,
-                    ChunkerVanillaEntityType.LINGERING_POTION,
                     ChunkerVanillaEntityType.MOVING_BLOCK,
                     ChunkerVanillaEntityType.SHIELD,
                     ChunkerVanillaEntityType.WITHER_SKULL_DANGEROUS
@@ -77,6 +77,9 @@ public class JavaBasicComponentItemResolverTests {
             ),
             ChunkerEffectType.class, Set.of(
                     ChunkerEffectType.FATAL_POISON
+            ),
+            ChunkerTrimMaterial.class, Set.of(
+                    ChunkerTrimMaterial.RESIN
             )
     );
     public static final JavaDataVersion VERSION = JavaDataVersion.latest();
@@ -93,6 +96,7 @@ public class JavaBasicComponentItemResolverTests {
                     0,
                     true,
                     true,
+                    null,
                     null
             ),
             new ChunkerMap(
@@ -106,6 +110,7 @@ public class JavaBasicComponentItemResolverTests {
                     0,
                     true,
                     true,
+                    null,
                     null
             )
 
@@ -204,6 +209,8 @@ public class JavaBasicComponentItemResolverTests {
             ).toArray();
         } else if (asClass.equals(ChunkerItemType.class)) {
             return generatePropertyValues(ChunkerVanillaItemType.class, property);
+        } else if (asClass.equals(ChunkerEntityType.class)) {
+            return generatePropertyValues(ChunkerVanillaEntityType.class, property);
         } else if (asClass.equals(ChunkerItemDisplay.class)) {
             return (T[]) new ChunkerItemDisplay[]{
                     new ChunkerItemDisplay(JsonTextUtil.fromText("Hi"), null, null),

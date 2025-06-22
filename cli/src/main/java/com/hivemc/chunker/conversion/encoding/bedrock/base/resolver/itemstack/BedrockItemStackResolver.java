@@ -21,7 +21,7 @@ import com.hivemc.chunker.conversion.intermediate.column.chunk.itemstack.firewor
 import com.hivemc.chunker.conversion.intermediate.column.chunk.itemstack.trim.ChunkerTrim;
 import com.hivemc.chunker.conversion.intermediate.column.chunk.itemstack.trim.ChunkerTrimMaterial;
 import com.hivemc.chunker.conversion.intermediate.column.chunk.itemstack.trim.ChunkerTrimPattern;
-import com.hivemc.chunker.conversion.intermediate.column.entity.type.ChunkerVanillaEntityType;
+import com.hivemc.chunker.conversion.intermediate.column.entity.type.ChunkerEntityType;
 import com.hivemc.chunker.conversion.intermediate.level.ChunkerLevel;
 import com.hivemc.chunker.conversion.intermediate.level.map.ChunkerMap;
 import com.hivemc.chunker.mapping.identifier.Identifier;
@@ -270,7 +270,7 @@ public class BedrockItemStackResolver extends ItemStackResolver<BedrockResolvers
                 for (Map.Entry<ChunkerEnchantmentType, Integer> enchantment : enchantments.entrySet()) {
                     Optional<Integer> id = resolvers.enchantmentIDResolver().from(enchantment.getKey());
                     if (id.isEmpty()) {
-                        resolvers.converter().logMissingMapping(Converter.MissingMappingType.ENCHANTMENT, enchantment.getKey().toString());
+                        resolvers.converter().logMissingMapping(Converter.MissingMappingType.ENCHANTMENT, String.valueOf(enchantment.getKey()));
                         continue; // Don't include not supported enchantments
                     }
 
@@ -318,9 +318,9 @@ public class BedrockItemStackResolver extends ItemStackResolver<BedrockResolvers
         // Spawn Eggs
         registerContextualHandler(ChunkerItemProperty.SPAWN_EGG_MOB, new PropertyHandler<>() {
             @Override
-            public Optional<ChunkerVanillaEntityType> read(@NotNull Pair<ChunkerItemStack, CompoundTag> state) {
+            public Optional<ChunkerEntityType> read(@NotNull Pair<ChunkerItemStack, CompoundTag> state) {
                 return state.right().getOptionalValue("ItemIdentifier", String.class).flatMap((identifier) -> {
-                    Optional<ChunkerVanillaEntityType> type = resolvers.entityTypeResolver().to(identifier);
+                    Optional<ChunkerEntityType> type = resolvers.entityTypeResolver().to(identifier);
                     if (type.isEmpty()) {
                         // Report missing mapping
                         resolvers.converter().logMissingMapping(Converter.MissingMappingType.ENTITY_TYPE, identifier);
@@ -335,13 +335,13 @@ public class BedrockItemStackResolver extends ItemStackResolver<BedrockResolvers
             }
 
             @Override
-            public void write(@NotNull Pair<ChunkerItemStack, CompoundTag> state, @NotNull ChunkerVanillaEntityType entityType) {
+            public void write(@NotNull Pair<ChunkerItemStack, CompoundTag> state, @NotNull ChunkerEntityType entityType) {
                 Optional<String> type = resolvers.entityTypeResolver().from(entityType);
                 if (type.isPresent()) {
                     state.right().put("ItemIdentifier", type.get());
                 } else {
                     // Report missing mapping
-                    resolvers.converter().logMissingMapping(Converter.MissingMappingType.ENTITY_TYPE, entityType.toString());
+                    resolvers.converter().logMissingMapping(Converter.MissingMappingType.ENTITY_TYPE, String.valueOf(entityType));
 
                     // If it's a spawn egg, turn the output to null as it's not valid
                     if (state.key().getIdentifier() == ChunkerVanillaItemType.SPAWN_EGG) {
@@ -462,7 +462,7 @@ public class BedrockItemStackResolver extends ItemStackResolver<BedrockResolvers
                 Optional<String> trimPattern = resolvers.trimPatternResolver().from(chunkerTrim.getPattern());
                 if (trimPattern.isEmpty()) {
                     // Report missing mapping
-                    resolvers.converter().logMissingMapping(Converter.MissingMappingType.TRIM_PATTERN, chunkerTrim.getPattern().toString());
+                    resolvers.converter().logMissingMapping(Converter.MissingMappingType.TRIM_PATTERN, String.valueOf(chunkerTrim.getPattern()));
                     return; // Don't write
                 }
 
@@ -470,7 +470,7 @@ public class BedrockItemStackResolver extends ItemStackResolver<BedrockResolvers
                 Optional<String> trimMaterial = resolvers.trimMaterialResolver().from(chunkerTrim.getMaterial());
                 if (trimMaterial.isEmpty()) {
                     // Report missing mapping
-                    resolvers.converter().logMissingMapping(Converter.MissingMappingType.TRIM_MATERIAL, chunkerTrim.getMaterial().toString());
+                    resolvers.converter().logMissingMapping(Converter.MissingMappingType.TRIM_MATERIAL, String.valueOf(chunkerTrim.getMaterial()));
                     return; // Don't write
                 }
 

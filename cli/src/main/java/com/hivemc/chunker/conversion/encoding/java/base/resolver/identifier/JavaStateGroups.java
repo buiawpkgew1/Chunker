@@ -223,10 +223,26 @@ public class JavaStateGroups {
             .state("orientation", VanillaBlockStates.ORIENTATION, JavaStateTypes.ORIENTATION)
             .state("triggered", VanillaBlockStates.TRIGGERED, JavaStateTypes.BOOL)
             .build();
-    public static final StateMappingGroup CREAKING_HEART = new StateMappingGroup.Builder()
-            .state("axis", VanillaBlockStates.AXIS, JavaStateTypes.AXIS)
-            .state("creaking", VanillaBlockStates.CREAKING, JavaStateTypes.CREAKING)
-            .build();
+    public static final VersionedStateMappingGroup CREAKING_HEART = new VersionedStateMappingGroup.Builder()
+            .defaults(new StateMappingGroup.Builder()
+                    .state("axis", VanillaBlockStates.AXIS, JavaStateTypes.AXIS)
+                    .state("creaking", VanillaBlockStates.CREAKING, JavaStateTypes.CREAKING)
+                    .defaultOutput(VanillaBlockStates.NATURAL, Bool.FALSE)
+                    .build())
+            // 1.21.4 added the natural field / changed creaking to active
+            .version(new Version(1, 21, 4), new StateMappingGroup.Builder()
+                    .state("axis", VanillaBlockStates.AXIS, JavaStateTypes.AXIS)
+                    .state("active", VanillaBlockStates.CREAKING, JavaStateTypes.CREAKING_BOOL)
+                    .state("natural", VanillaBlockStates.NATURAL, JavaStateTypes.BOOL)
+                    .build()
+            )
+            // 1.21.5 removed the active state and added creaking_heart_state
+            .version(new Version(1, 21, 5), new StateMappingGroup.Builder()
+                    .state("axis", VanillaBlockStates.AXIS, JavaStateTypes.AXIS)
+                    .state("creaking_heart_state", VanillaBlockStates.CREAKING, JavaStateTypes.CREAKING_HEART_STATE)
+                    .state("natural", VanillaBlockStates.NATURAL, JavaStateTypes.BOOL)
+                    .build()
+            ).build();
     public static final StateMappingGroup DAYLIGHT_DETECTOR = new StateMappingGroup.Builder()
             .state("inverted", VanillaBlockStates.INVERTED, JavaStateTypes.BOOL)
             .state("power", VanillaBlockStates.POWER, JavaStateTypes.POWER)
@@ -251,6 +267,11 @@ public class JavaStateGroups {
             .state("hinge", VanillaBlockStates.DOOR_HINGE, JavaStateTypes.HINGE)
             .state("open", VanillaBlockStates.OPEN, JavaStateTypes.BOOL)
             .state("powered", VanillaBlockStates.POWERED, JavaStateTypes.BOOL)
+            .build();
+    public static final StateMappingGroup DRIED_GHAST = new StateMappingGroup.Builder()
+            .state("facing", VanillaBlockStates.FACING_HORIZONTAL, JavaStateTypes.FACING_HORIZONTAL)
+            .state("hydration", VanillaBlockStates.REHYDRATION_LEVEL, JavaStateTypes.REHYDRATION_LEVEL)
+            .state("waterlogged", VanillaBlockStates.WATERLOGGED, JavaStateTypes.BOOL)
             .build();
     public static final StateMappingGroup END_PORTAL_FRAME = new StateMappingGroup.Builder()
             .state("eye", VanillaBlockStates.EYE, JavaStateTypes.BOOL)
@@ -341,6 +362,10 @@ public class JavaStateGroups {
             ).build();
     public static final StateMappingGroup LAVA_CAULDRON = new StateMappingGroup.Builder()
             .defaultOutput(VanillaBlockStates.CAULDRON_LEVEL, CauldronLevel._6)
+            .build();
+    public static final StateMappingGroup LEAF_LITTER = new StateMappingGroup.Builder()
+            .state("facing", VanillaBlockStates.FACING_HORIZONTAL, JavaStateTypes.FACING_HORIZONTAL)
+            .state("segment_amount", VanillaBlockStates.SEGMENT_AMOUNT, JavaStateTypes.SEGMENT_AMOUNT)
             .build();
     public static final VersionedStateMappingGroup LEAVES = new VersionedStateMappingGroup.Builder()
             .defaults(new StateMappingGroup.Builder()
@@ -586,6 +611,9 @@ public class JavaStateGroups {
             .state("half", VanillaBlockStates.HALF, JavaStateTypes.UPPER_LOWER_TO_HALF)
             .defaultOutput(VanillaBlockStates.WATERLOGGED, Bool.TRUE)
             .build();
+    public static final StateMappingGroup TEST_BLOCK = new StateMappingGroup.Builder()
+            .state("mode", VanillaBlockStates.TEST_BLOCK_MODE, JavaStateTypes.TEST_BLOCK_MODE)
+            .build();
     public static final VersionedStateMappingGroup TNT = new VersionedStateMappingGroup.Builder()
             .defaults(new StateMappingGroup.Builder()
                     .defaultOutput(VanillaBlockStates.UNDERWATER, Bool.FALSE)
@@ -697,5 +725,9 @@ public class JavaStateGroups {
             .build();
     public static final StateMappingGroup WATERLOGGED_DEFAULT_TRUE = new StateMappingGroup.Builder()
             .defaultOutput(VanillaBlockStates.WATERLOGGED, Bool.TRUE)
+            .build();
+    public static final StateMappingGroup WILDFLOWERS = new StateMappingGroup.Builder()
+            .state("facing", VanillaBlockStates.FACING_HORIZONTAL, JavaStateTypes.FACING_HORIZONTAL)
+            .state("flower_amount", VanillaBlockStates.FLOWER_AMOUNT, JavaStateTypes.FLOWERS)
             .build();
 }

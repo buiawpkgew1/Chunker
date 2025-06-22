@@ -25,7 +25,7 @@ import com.hivemc.chunker.conversion.intermediate.column.chunk.itemstack.trim.Ch
 import com.hivemc.chunker.conversion.intermediate.column.chunk.itemstack.trim.ChunkerTrimPattern;
 import com.hivemc.chunker.conversion.intermediate.column.entity.Entity;
 import com.hivemc.chunker.conversion.intermediate.column.entity.PaintingEntity;
-import com.hivemc.chunker.conversion.intermediate.column.entity.type.ChunkerVanillaEntityType;
+import com.hivemc.chunker.conversion.intermediate.column.entity.type.ChunkerEntityType;
 import com.hivemc.chunker.conversion.intermediate.level.ChunkerLevel;
 import com.hivemc.chunker.conversion.intermediate.level.map.ChunkerMap;
 import com.hivemc.chunker.mapping.identifier.Identifier;
@@ -271,7 +271,7 @@ public class JavaItemStackResolver extends ItemStackResolver<JavaResolvers, Comp
                 for (Map.Entry<ChunkerEnchantmentType, Integer> enchantment : value.entrySet()) {
                     Optional<String> id = resolvers.enchantmentResolver().from(enchantment.getKey());
                     if (id.isEmpty()) {
-                        resolvers.converter().logMissingMapping(Converter.MissingMappingType.ENCHANTMENT, enchantment.getKey().toString());
+                        resolvers.converter().logMissingMapping(Converter.MissingMappingType.ENCHANTMENT, String.valueOf(enchantment.getKey()));
                         continue; // Don't include not supported enchantments
                     }
 
@@ -316,7 +316,7 @@ public class JavaItemStackResolver extends ItemStackResolver<JavaResolvers, Comp
         // Spawn Eggs
         registerContextualHandler(ChunkerItemProperty.SPAWN_EGG_MOB, new PropertyHandler<>() {
             @Override
-            public Optional<ChunkerVanillaEntityType> read(@NotNull Pair<ChunkerItemStack, CompoundTag> state) {
+            public Optional<ChunkerEntityType> read(@NotNull Pair<ChunkerItemStack, CompoundTag> state) {
                 // Check if tag is present
                 CompoundTag tag = state.value().getCompound("tag");
                 if (tag == null) return Optional.empty();
@@ -327,7 +327,7 @@ public class JavaItemStackResolver extends ItemStackResolver<JavaResolvers, Comp
 
                 // Turn the ID into a chunker entity type
                 return entityTag.getOptionalValue("id", String.class).flatMap((identifier) -> {
-                    Optional<ChunkerVanillaEntityType> type = resolvers.entityTypeResolver().to(identifier);
+                    Optional<ChunkerEntityType> type = resolvers.entityTypeResolver().to(identifier);
                     if (type.isEmpty()) {
                         // Report missing mapping
                         resolvers.converter().logMissingMapping(Converter.MissingMappingType.ENTITY_TYPE, identifier);
@@ -342,14 +342,14 @@ public class JavaItemStackResolver extends ItemStackResolver<JavaResolvers, Comp
             }
 
             @Override
-            public void write(@NotNull Pair<ChunkerItemStack, CompoundTag> state, @NotNull ChunkerVanillaEntityType entityType) {
+            public void write(@NotNull Pair<ChunkerItemStack, CompoundTag> state, @NotNull ChunkerEntityType entityType) {
                 Optional<String> type = resolvers.entityTypeResolver().from(entityType);
                 if (type.isPresent()) {
                     CompoundTag entityTag = state.value().getOrCreateCompound("tag").getOrCreateCompound("EntityTag");
                     entityTag.put("id", type.get());
                 } else {
                     // Report missing mapping
-                    resolvers.converter().logMissingMapping(Converter.MissingMappingType.ENTITY_TYPE, entityType.toString());
+                    resolvers.converter().logMissingMapping(Converter.MissingMappingType.ENTITY_TYPE, String.valueOf(entityType));
 
                     // If it's a spawn egg, turn the output to null as it's not valid
                     if (state.key().getIdentifier() == ChunkerVanillaItemType.SPAWN_EGG) {
@@ -404,12 +404,7 @@ public class JavaItemStackResolver extends ItemStackResolver<JavaResolvers, Comp
                     if (state.key().getIdentifier().getItemStackType() == ChunkerVanillaItemType.WRITABLE_BOOK) {
                         pagesJSON.add(JsonTextUtil.fromText(page));
                     } else {
-                        try {
-                            pagesJSON.add(JsonTextUtil.fromJSON(page));
-                        } catch (Exception e) {
-                            // Fallback to literal parsing
-                            pagesJSON.add(JsonTextUtil.fromText(page));
-                        }
+                        pagesJSON.add(JsonTextUtil.fromJSON(page));
                     }
                 }
                 return Optional.of(pagesJSON);
@@ -520,7 +515,7 @@ public class JavaItemStackResolver extends ItemStackResolver<JavaResolvers, Comp
                 Optional<String> trimPattern = resolvers.trimPatternResolver().from(chunkerTrim.getPattern());
                 if (trimPattern.isEmpty()) {
                     // Report missing mapping
-                    resolvers.converter().logMissingMapping(Converter.MissingMappingType.TRIM_PATTERN, chunkerTrim.getPattern().toString());
+                    resolvers.converter().logMissingMapping(Converter.MissingMappingType.TRIM_PATTERN, String.valueOf(chunkerTrim.getPattern()));
                     return; // Don't write
                 }
 
@@ -528,7 +523,7 @@ public class JavaItemStackResolver extends ItemStackResolver<JavaResolvers, Comp
                 Optional<String> trimMaterial = resolvers.trimMaterialResolver().from(chunkerTrim.getMaterial());
                 if (trimMaterial.isEmpty()) {
                     // Report missing mapping
-                    resolvers.converter().logMissingMapping(Converter.MissingMappingType.TRIM_MATERIAL, chunkerTrim.getMaterial().toString());
+                    resolvers.converter().logMissingMapping(Converter.MissingMappingType.TRIM_MATERIAL, String.valueOf(chunkerTrim.getMaterial()));
                     return; // Don't write
                 }
 
@@ -746,6 +741,7 @@ public class JavaItemStackResolver extends ItemStackResolver<JavaResolvers, Comp
                     CompoundTag tag = entityTag.get();
 
                     // Remove any position based data
+                    tag.remove("block_pos");
                     tag.remove("TileX");
                     tag.remove("TileY");
                     tag.remove("TileZ");

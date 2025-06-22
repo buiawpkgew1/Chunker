@@ -1,6 +1,7 @@
 package com.hivemc.chunker.conversion.encoding.java.base.resolver.entity.legacy;
 
 import com.hivemc.chunker.conversion.encoding.base.Version;
+import com.hivemc.chunker.conversion.intermediate.column.entity.type.ChunkerEntityType;
 import com.hivemc.chunker.conversion.intermediate.column.entity.type.ChunkerVanillaEntityType;
 import com.hivemc.chunker.resolver.Resolver;
 import com.hivemc.chunker.util.InvertibleMap;
@@ -10,7 +11,7 @@ import java.util.Optional;
 /**
  * Legacy entity type resolver, used for Java
  */
-public class JavaLegacyEntityTypeResolver implements Resolver<String, ChunkerVanillaEntityType> {
+public class JavaLegacyEntityTypeResolver implements Resolver<String, ChunkerEntityType> {
     private final InvertibleMap<ChunkerVanillaEntityType, String> mapping = InvertibleMap.enumKeys(ChunkerVanillaEntityType.class);
 
     /**
@@ -49,11 +50,11 @@ public class JavaLegacyEntityTypeResolver implements Resolver<String, ChunkerVan
         mapping.put(ChunkerVanillaEntityType.ITEM_FRAME, "ItemFrame");
         mapping.put(ChunkerVanillaEntityType.MAGMA_CUBE, "LavaSlime");
         mapping.put(ChunkerVanillaEntityType.LEASH_KNOT, "LeashKnot");
+        mapping.put(ChunkerVanillaEntityType.MINECART, "Minecart");
         mapping.put(ChunkerVanillaEntityType.CHEST_MINECART, "MinecartChest");
         mapping.put(ChunkerVanillaEntityType.COMMAND_BLOCK_MINECART, "MinecartCommandBlock");
         mapping.put(ChunkerVanillaEntityType.FURNACE_MINECART, "MinecartFurnace");
         mapping.put(ChunkerVanillaEntityType.HOPPER_MINECART, "MinecartHopper");
-        mapping.put(ChunkerVanillaEntityType.MINECART, "MinecartRideable");
         mapping.put(ChunkerVanillaEntityType.SPAWNER_MINECART, "MinecartSpawner");
         mapping.put(ChunkerVanillaEntityType.TNT_MINECART, "MinecartTNT");
         mapping.put(ChunkerVanillaEntityType.MULE, "Mule");
@@ -94,18 +95,24 @@ public class JavaLegacyEntityTypeResolver implements Resolver<String, ChunkerVan
         mapping.put(ChunkerVanillaEntityType.ZOMBIE_VILLAGER, "ZombieVillager");
 
         if (version.isGreaterThanOrEqual(1, 9, 0)) {
+            mapping.put(ChunkerVanillaEntityType.MINECART, "MinecartRideable");
             mapping.put(ChunkerVanillaEntityType.SHULKER, "Shulker");
             mapping.put(ChunkerVanillaEntityType.SHULKER_BULLET, "ShulkerBullet");
         }
     }
 
     @Override
-    public Optional<String> from(ChunkerVanillaEntityType input) {
-        return Optional.ofNullable(mapping.forward().get(input));
+    public Optional<String> from(ChunkerEntityType input) {
+        if (input instanceof ChunkerVanillaEntityType chunkerVanillaEntityType) {
+            return Optional.ofNullable(mapping.forward().get(chunkerVanillaEntityType));
+        } else {
+            // No possible mapping
+            return Optional.empty();
+        }
     }
 
     @Override
-    public Optional<ChunkerVanillaEntityType> to(String input) {
+    public Optional<ChunkerEntityType> to(String input) {
         return Optional.ofNullable(mapping.inverse().get(input));
     }
 }

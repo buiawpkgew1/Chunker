@@ -67,6 +67,7 @@ public class BedrockBlockIdentifierValidationTests {
             "minecraft:mysterious_frame_slot",
 
             // Education Blocks
+            "minecraft:chalkboard",
             "minecraft:camera",
             "minecraft:allow",
             "minecraft:deny",
@@ -273,6 +274,11 @@ public class BedrockBlockIdentifierValidationTests {
         // Redstone signal isn't currently converted for pressure plates
         if (input.getIdentifier().contains("_pressure_plate")) {
             clonedStates.remove("redstone_signal");
+        }
+
+        // Natural bit isn't stored
+        if (input.getIdentifier().equals("minecraft:creaking_heart")) {
+            clonedStates.remove("natural");
         }
 
         // Hanging bit isn't stored
@@ -510,7 +516,7 @@ public class BedrockBlockIdentifierValidationTests {
             // Looks the same after state 1
             clonedStates.replace("growth", new StateValueInt(7));
         }
-        if (input.getIdentifier().equals("minecraft:pink_petals") && input.getStates().containsKey("growth") && ((StateValueInt) input.getStates().get("growth")).getValue() >= 4) {
+        if ((input.getIdentifier().equals("minecraft:pink_petals") || input.getIdentifier().equals("minecraft:wildflowers") || input.getIdentifier().equals("minecraft:leaf_litter")) && input.getStates().containsKey("growth") && ((StateValueInt) input.getStates().get("growth")).getValue() >= 4) {
             // Looks the same after state 4
             clonedStates.replace("growth", new StateValueInt(3));
         }

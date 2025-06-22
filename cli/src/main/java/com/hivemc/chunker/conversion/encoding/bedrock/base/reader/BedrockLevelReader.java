@@ -247,6 +247,11 @@ public class BedrockLevelReader implements LevelReader, BedrockReaderWriter {
 
     @Override
     public @Nullable Object readCustomLevelSetting(@NotNull CompoundTag root, @NotNull String targetName, @NotNull Class<?> type) {
+        // Check for SummerDrop2025 support
+        if (targetName.equals("SummerDrop2025")) {
+            return false;
+        }
+
         // Check for WinterDrop2024 support
         if (targetName.equals("WinterDrop2024")) {
             return false;
@@ -293,7 +298,7 @@ public class BedrockLevelReader implements LevelReader, BedrockReaderWriter {
                     // Flat generator
                     String generatorOptions = root.getString("generatorOptions", null);
                     if (generatorOptions != null && !generatorOptions.isEmpty()) {
-                        if (root.getString("FlatWorldLayers", null).equals(VOID_WORD_STRING)) {
+                        if (VOID_WORD_STRING.equals(root.getString("FlatWorldLayers", null))) {
                             // VOID
                             yield ChunkerGeneratorType.VOID;
                         }
@@ -477,7 +482,8 @@ public class BedrockLevelReader implements LevelReader, BedrockReaderWriter {
                     mapCompound.getInt("zCenter", 0),
                     mapCompound.getByte("unlimitedTracking", (byte) 0) != 0,
                     mapCompound.getByte("mapLocked", (byte) 0) != 0,
-                    mapCompound.getByteArray("colors", null)
+                    mapCompound.getByteArray("colors", null),
+                    resolvers.converter().shouldAllowNBTCopying() ? mapCompound : null
             );
 
         } catch (Exception e) {

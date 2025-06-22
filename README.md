@@ -2,7 +2,7 @@
 
 **在Minecraft Java版和基岩版之间转换世界**
 
-Chunker是一个Java应用程序，可以让您在Java和基岩版Minecraft的世界之间进行转换。它提供了一个简单的界面，用于转换世界，并允许您在游戏的不同版本之间升级和降级世界。
+Chunker是一款Java应用程序，可让您转换Java版和基岩版的我的世界世界。它提供了一个简单的界面来转换世界，并允许您在游戏的不同版本之间升级和降级世界。
 
 支持的格式：
 
@@ -15,7 +15,7 @@ Chunker是一个Java应用程序，可以让您在Java和基岩版Minecraft的�
     - 1.18.0 - 1.18.30
     - 1.19.0 - 1.19.80
     - 1.20.0 - 1.20.80
-    - 1.21.0 - 1.21.40
+    - 1.21.0 - 1.21.90
 - Java版
     - 1.8.8
     - 1.9.0 - 1.9.3
@@ -30,7 +30,7 @@ Chunker是一个Java应用程序，可以让您在Java和基岩版Minecraft的�
     - 1.18.0 - 1.18.2
     - 1.19.0 - 1.19.4
     - 1.20.0 - 1.20.6
-    - 1.21.0 - 1.21.2
+    - 1.21.0 - 1.21.6
 
 **微软创作者文档：**
 https://learn.microsoft.com/en-us/minecraft/creator/documents/chunkeroverview?view=minecraft-bedrock-stable
@@ -42,6 +42,11 @@ https://learn.microsoft.com/en-us/minecraft/creator/documents/chunkeroverview?vi
 或者，请参阅构建部分，了解如何自行构建Chunker。
 
 下载适合您操作系统的应用程序版本，然后您将能够运行Chunker的基于Electron的前端。
+
+Chunker defaults to a maximum of 75% of available memory, you can customise this by specifying the amount when launching
+Chunker e.g. `Chunker.exe -Xmx8G` for 8 gigabytes.
+
+Chunker forwards `-Xmx` and `-Xms` to the backing JVM, if you wish to supply other options use `--java-options="..."`.
 
 命令行界面用法
 --------
@@ -101,7 +106,7 @@ Chunker还使用它自己分叉的Java LevelDB实现，地址是：https://githu
 
 Chunker尽可能地进行自动化测试以验证数据，例如，块标识符会根据基岩版和Java版的调色板进行验证，这允许在构建过程中识别映射错误的问题。您可以通过在`./gradlew build`命令后附加 `-x test` 来跳过构建过程中的测试。
 
-某些测试已从默认测试套件中排除，并标记为“长时间运行”，这是因为它们可能需要几分钟才能完全完成。
+一些测试已从默认测试套件中排除，这些测试标记有“LongRunning”标签，这是因为它们可能需要几分钟才能完全完成。
 
 当前不支持的功能
 --------
@@ -115,7 +120,7 @@ Chunker尽可能地进行自动化测试以验证数据，例如，块标识符�
 
 该项目采用MIT许可证，相关细节请参见[LICENSE](LICENSE)。
 
-该项目由Hive Games维护。该项目获得Mojang Studios的资金支持。Mojang Studios及其母公司微软对该项目内容不承担任何责任。
+该项目由蜂巢游戏（Hive Games）维护。本项目获得了Mojang Studios的资助。Mojang Studios及其母公司微软对本项目的内容不承担任何责任。
 
 我们正在招聘！
 --------

@@ -3,7 +3,7 @@ package com.hivemc.chunker.conversion.intermediate.column.entity.type;
 /**
  * An enum representing every type of entity in the game.
  */
-public enum ChunkerVanillaEntityType {
+public enum ChunkerVanillaEntityType implements ChunkerEntityType {
     ALLAY(true),
     AREA_EFFECT_CLOUD,
     ARMADILLO(true),
@@ -55,6 +55,7 @@ public enum ChunkerVanillaEntityType {
     GLOW_SQUID(true),
     GOAT(true),
     GUARDIAN(true),
+    HAPPY_GHAST(true),
     HOGLIN(true),
     HOPPER_MINECART,
     HORSE(true),
@@ -78,6 +79,7 @@ public enum ChunkerVanillaEntityType {
     MOVING_BLOCK,
     MULE(true),
     OCELOT(true),
+    OMINOUS_ITEM_SPAWNER,
     PAINTING,
     PANDA(true),
     PARROT(true),

@@ -1,5 +1,6 @@
 package com.hivemc.chunker.cli.messenger;
 
+import com.google.common.util.concurrent.ExecutionError;
 import com.google.gson.*;
 import com.hivemc.chunker.cli.messenger.messaging.BasicMessage;
 import com.hivemc.chunker.cli.messenger.messaging.BasicMessageTypeAdapter;
@@ -29,6 +30,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.*;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
@@ -81,6 +84,7 @@ public class Messenger {
                                     false,
                                     "World format is not supported.",
                                     "",
+                                    null,
                                     null
                             ));
                         }
@@ -108,7 +112,14 @@ public class Messenger {
                         // Write an error if it failed to start
                         if (!started) {
                             removeWorldConverter(settingsRequest.getAnonymousId(), settingsRequest.getRequestId());
-                            write(new ErrorResponse(settingsRequest.getRequestId(), false, "Failed to start settings task.", null, null));
+                            write(new ErrorResponse(
+                                    settingsRequest.getRequestId(),
+                                    false,
+                                    "Failed to start settings task.",
+                                    null,
+                                    null,
+                                    null
+                            ));
                         }
                     }
                     case PREVIEW -> {
@@ -146,7 +157,14 @@ public class Messenger {
                         // Write an error if it failed to start
                         if (!started) {
                             removeWorldConverter(previewRequest.getAnonymousId(), previewRequest.getRequestId());
-                            write(new ErrorResponse(previewRequest.getRequestId(), false, "Failed to start preview.", null, null));
+                            write(new ErrorResponse(
+                                    previewRequest.getRequestId(),
+                                    false,
+                                    "Failed to start preview.",
+                                    null,
+                                    null,
+                                    null
+                            ));
                         }
                     }
                     case CONVERT -> {
@@ -157,7 +175,14 @@ public class Messenger {
                                 worldConverter.setBlockMappings(new MappingsFileResolvers(MappingsFile.load(convertRequest.getMappings())));
                             } catch (Exception e) {
                                 removeWorldConverter(convertRequest.getAnonymousId(), convertRequest.getRequestId());
-                                write(new ErrorResponse(convertRequest.getRequestId(), false, "Failed to parse block mappings.", null, e.getMessage()));
+                                write(new ErrorResponse(
+                                        convertRequest.getRequestId(),
+                                        false,
+                                        "Failed to parse block mappings.",
+                                        null,
+                                        e.getMessage(),
+                                        printStackTrace(e)
+                                ));
                                 return;
                             }
                         }
@@ -185,7 +210,14 @@ public class Messenger {
                                         map.loadImage(new File(jsonObject.get("file").getAsString()));
                                     } catch (IOException e) {
                                         removeWorldConverter(convertRequest.getAnonymousId(), convertRequest.getRequestId());
-                                        write(new ErrorResponse(convertRequest.getRequestId(), false, "Failed to parse map " + map.getId() + ".", null, e.getMessage()));
+                                        write(new ErrorResponse(
+                                                convertRequest.getRequestId(),
+                                                false,
+                                                "Failed to parse map " + map.getId() + ".",
+                                                null,
+                                                e.getMessage(),
+                                                printStackTrace(e)
+                                        ));
                                         return;
                                     }
                                 }
@@ -219,7 +251,14 @@ public class Messenger {
                         Optional<? extends LevelWriter> writer = findWriter(convertRequest.getOutputType(), worldConverter, new File(convertRequest.getOutputPath()));
                         if (writer.isEmpty()) {
                             removeWorldConverter(convertRequest.getAnonymousId(), convertRequest.getRequestId());
-                            write(new ErrorResponse(convertRequest.getRequestId(), false, "Failed to find output type.", null, null));
+                            write(new ErrorResponse(
+                                    convertRequest.getRequestId(),
+                                    false,
+                                    "Failed to find output type.",
+                                    null,
+                                    null,
+                                    null
+                            ));
                         } else {
                             boolean started = startConversionRequest(
                                     convertRequest.getAnonymousId(),
@@ -232,7 +271,14 @@ public class Messenger {
                             // Write an error if it failed to start
                             if (!started) {
                                 removeWorldConverter(convertRequest.getAnonymousId(), convertRequest.getRequestId());
-                                write(new ErrorResponse(convertRequest.getRequestId(), false, "Failed to start conversion.", null, null));
+                                write(new ErrorResponse(
+                                        convertRequest.getRequestId(),
+                                        false,
+                                        "Failed to start conversion.",
+                                        null,
+                                        null,
+                                        null
+                                ));
                             }
                         }
                     }
@@ -261,6 +307,7 @@ public class Messenger {
                                     message.getRequestId(),
                                     false,
                                     "Message type does not exist, outdated software?",
+                                    null,
                                     null,
                                     null
                             ));
@@ -387,9 +434,21 @@ public class Messenger {
                             throwable = throwable.getCause();
                         }
 
+                        // Unwrap execution error
+                        if (throwable instanceof ExecutionError) {
+                            throwable = throwable.getCause();
+                        }
+
                         // Check that it isn't a cancellation
                         if (throwable instanceof CancellationException) {
-                            write(new ErrorResponse(taskID, true, "The process was cancelled", null, null));
+                            write(new ErrorResponse(
+                                    taskID,
+                                    true,
+                                    "The process was cancelled",
+                                    null,
+                                    null,
+                                    null
+                            ));
                         } else {
                             // Report if it wasn't logged
                             if (!(throwable instanceof LoggedException)) {
@@ -404,14 +463,22 @@ public class Messenger {
                                 write(new ErrorResponse(
                                         taskID,
                                         false,
-                                        "A fatal error occurred during conversion.",
+                                        getFriendlyErrorMessage(exception.get()),
                                         sessionID.toString(),
-                                        exception.get().getMessage()
+                                        exception.get().getMessage(),
+                                        printStackTrace(exception.get())
                                 ));
                             }
                         }
                     } else if (worldConverter.isCancelled()) {
-                        write(new ErrorResponse(taskID, true, "The process was cancelled", null, null));
+                        write(new ErrorResponse(
+                                taskID,
+                                true,
+                                "The process was cancelled",
+                                null,
+                                null,
+                                null
+                        ));
                     } else {
                         JsonObject output = new JsonObject();
 
@@ -488,9 +555,9 @@ public class Messenger {
             encoding.addProperty("id", toEncodedString(encodingType, version));
             encoding.addProperty("version", version.toString());
         } else {
-            encoding.addProperty("id", encodingType.getName().toUpperCase());
+            encoding.addProperty("id", encodingType.getName().toUpperCase(Locale.ROOT));
         }
-        encoding.addProperty("type", encodingType.getName().toUpperCase());
+        encoding.addProperty("type", encodingType.getName().toUpperCase(Locale.ROOT));
         return encoding;
     }
 
@@ -510,7 +577,7 @@ public class Messenger {
         }
 
         // Return the encoded version
-        return encodingType.getName().toUpperCase() + "_" + encodedVersion;
+        return encodingType.getName().toUpperCase(Locale.ROOT) + "_" + encodedVersion;
     }
 
     /**
@@ -520,5 +587,46 @@ public class Messenger {
      */
     public static void write(BasicMessage message) {
         System.out.println(GSON.toJson(message));
+    }
+
+    /**
+     * Convert a throwable into a string using printStackTrace.
+     *
+     * @param throwable the throwable to output.
+     * @return the stack trace as a string or null if it failed to print.
+     */
+    @Nullable
+    public static String printStackTrace(Throwable throwable) {
+        try (StringWriter stringWriter = new StringWriter();
+             PrintWriter printWriter = new PrintWriter(stringWriter)) {
+            throwable.printStackTrace(printWriter);
+            return stringWriter.toString();
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    /**
+     * Get a friendly error message to show to the user as the main message when conversion fails.
+     *
+     * @param throwable the throwable which caused the error.
+     * @return a user-friendly error message, if one doesn't exist it will just state "A fatal error occurred during
+     * conversion."
+     */
+    public static String getFriendlyErrorMessage(Throwable throwable) {
+        // Unwrap CompletionException
+        if (throwable instanceof CompletionException) {
+            throwable = throwable.getCause();
+        }
+
+        // Handle the case that LevelDB fails to read a marketplace world
+        if (throwable instanceof IllegalStateException &&
+                throwable.getMessage().equals("CURRENT file does not end with newline")) {
+            return "The world is either encrypted or corrupted. Chunker is unable to read " +
+                    "marketplace worlds as they are encrypted.";
+        }
+
+        // Return the default
+        return "A fatal error occurred during conversion.";
     }
 }

@@ -36,7 +36,7 @@ dependencies {
 }
 
 group = "com.hivemc.chunker"
-version = "1.3.0"
+version = "1.8.0"
 description = "chunker"
 base.archivesName = "chunker-cli"
 java.sourceCompatibility = JavaVersion.VERSION_17
@@ -50,6 +50,24 @@ java {
 publishing {
     publications.create<MavenPublication>("maven") {
         from(components["java"])
+
+        pom {
+            description.set("Convert Minecraft worlds between Java Edition and Bedrock Edition CLI/API.")
+        }
+    }
+
+    // Only define the repositories if the url is present
+    val deployUrl = System.getenv("MAVEN_DEPLOY_URL")
+    if (deployUrl != null) {
+        repositories {
+            maven {
+                url = uri(System.getenv("MAVEN_DEPLOY_URL"))
+                credentials {
+                    username = System.getenv("MAVEN_DEPLOY_USERNAME")
+                    password = System.getenv("MAVEN_DEPLOY_PASSWORD")
+                }
+            }
+        }
     }
 }
 
@@ -103,22 +121,18 @@ tasks.jar {
     archiveClassifier.set("unshaded")
 
     val gitVersion: () -> String = {
-        val stdout = ByteArrayOutputStream()
-
         // Get the current branch
-        project.exec {
+        val branch = providers.exec {
             commandLine("git", "branch", "--show-current")
-            standardOutput = stdout
-        }
+        }.standardOutput.asText.getOrElse("unknown");
 
         // Get the current commit
-        project.exec {
+        val commit = providers.exec {
             commandLine("git", "describe", "--tags", "--always")
-            standardOutput = stdout
-        }
+        }.standardOutput.asText.getOrElse("unknown")
 
         // Replace newlines with dashes and trim it
-        stdout.toString().trim().replace("\n", "-").replace("\r", "")
+        branch.plus(commit).trim().replace("\n", "-").replace("\r", "")
     }
 
     // Set attributes for running the jar

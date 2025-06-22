@@ -111,6 +111,7 @@ public class BedrockLevelWriter implements LevelWriter, BedrockReaderWriter {
      * @throws IOException if it failed to remap the database.
      */
     protected void remapExistingDB() throws IOException {
+        List<byte[]> removals = new ArrayList<>();
         try (DBIterator iterator = database.iterator()) {
             while (iterator.hasNext()) {
                 Map.Entry<byte[], byte[]> entry = iterator.next();
@@ -148,7 +149,7 @@ public class BedrockLevelWriter implements LevelWriter, BedrockReaderWriter {
                         // If unknown report an issue
                         if (dimension == null) {
                             converter.logNonFatalException(new Exception("Unknown dimension key " + dimensionID));
-                            iterator.remove();
+                            removals.add(key);
                             continue;
                         }
                     }
@@ -167,7 +168,7 @@ public class BedrockLevelWriter implements LevelWriter, BedrockReaderWriter {
                             byte[] value = entry.getValue();
 
                             // Delete old key
-                            iterator.remove();
+                            removals.add(key);
 
                             // Write new key (with dimension changed)
                             if (containsSubChunk) {
@@ -178,10 +179,19 @@ public class BedrockLevelWriter implements LevelWriter, BedrockReaderWriter {
                         }
                     } else {
                         // Remove as the dimension/column has been pruned
-                        iterator.remove();
+                        removals.add(key);
                     }
                 }
             }
+        }
+
+        // Remove any keys marked for removal
+        try (WriteBatch writeBatch = database.createWriteBatch()) {
+            for (byte[] key : removals) {
+                writeBatch.delete(key);
+            }
+            database.write(writeBatch);
+            removals.clear();
         }
     }
 
@@ -257,12 +267,24 @@ public class BedrockLevelWriter implements LevelWriter, BedrockReaderWriter {
      * @throws Exception if it failed to write the map.
      */
     protected CompoundTag prepareMap(ChunkerMap chunkerMap) throws Exception {
-        CompoundTag mapData = new CompoundTag();
-
+        // Use the original map NBT as a base if it's present
+        CompoundTag mapData = chunkerMap.getOriginalNBT() != null ? chunkerMap.getOriginalNBT() : new CompoundTag();
         mapData.put("mapId", chunkerMap.getId());
-        mapData.put("parentMapId", -1L);
-        mapData.put("decorations", new ListTag<>(TagType.COMPOUND));
-        mapData.put("scale", (byte) 4);// Requires 4 for some reason when it's not the parent map
+
+        // Set the parentMapId to -1 if it's not present
+        if (!mapData.contains("parentMapId")) {
+            mapData.put("parentMapId", -1L);
+        }
+
+        // Add the decorations if they're not present
+        if (!mapData.contains("decorations")) {
+            mapData.put("decorations", new ListTag<>(TagType.COMPOUND));
+        }
+
+        // Scale requires 4 when it's not the parent map
+        mapData.put("scale", mapData.getLong("parentMapId", -1L) == -1L ? (byte) 4 : chunkerMap.getScale());
+
+        // Copy over the other settings
         mapData.put("dimension", chunkerMap.getDimension().getBedrockID());
         mapData.put("width", (short) chunkerMap.getWidth());
         mapData.put("height", (short) chunkerMap.getHeight());
@@ -328,6 +350,12 @@ public class BedrockLevelWriter implements LevelWriter, BedrockReaderWriter {
 
     @Override
     public void writeCustomLevelSetting(ChunkerLevelSettings chunkerLevelSettings, CompoundTag output, String targetName, Object value) {
+        // Check for next update
+        if (targetName.equals("SummerDrop2025")) {
+            // Not supported
+            return;
+        }
+
         // Check for next update
         if (targetName.equals("WinterDrop2024")) {
             // Not supported
@@ -565,7 +593,7 @@ public class BedrockLevelWriter implements LevelWriter, BedrockReaderWriter {
         playerTag.put("Offhand", offhand);
 
         // Write dimension / gamemode
-        playerTag.put("DimensionId", player.getDimension().getBedrockID());
+        playerTag.put("DimensionId", (int) player.getDimension().getBedrockID());
 
         // Handle specific game types
         if (player.getGameType() == 3 || player.getGameType() == 4 || player.getGameType() == 6) {

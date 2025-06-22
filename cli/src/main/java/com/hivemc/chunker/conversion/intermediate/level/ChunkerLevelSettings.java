@@ -153,6 +153,13 @@ public class ChunkerLevelSettings {
     @Hidden
     public boolean WinterDrop2024 = false;
 
+    @CustomType
+    @Category(Category.Type.WORLD_SETTINGS)
+    @Bedrock
+    @Java
+    @Hidden
+    public boolean SummerDrop2025 = false;
+
     @Bedrock
     @Category(Category.Type.GAME_RULES)
     public boolean falldamage = true;
@@ -438,6 +445,7 @@ public class ChunkerLevelSettings {
     public double BorderWarningTime = 15;
 
     @Java
+    @Bedrock("IsHardcore")
     @Category(Category.Type.WORLD_SETTINGS)
     public boolean hardcore = false;
 

@@ -1,6 +1,5 @@
 package com.hivemc.chunker.conversion.encoding.bedrock.util;
 
-import com.google.common.base.Charsets;
 import com.google.common.primitives.Bytes;
 import com.hivemc.chunker.conversion.intermediate.column.chunk.ChunkCoordPair;
 import com.hivemc.chunker.conversion.intermediate.world.Dimension;
@@ -44,7 +43,7 @@ public class LevelDBKey {
      * @return the string as UTF-8 with the prefix removed.
      */
     public static String extractSuffix(byte[] input, byte[] prefix) {
-        return new String(input, prefix.length, input.length - prefix.length, Charsets.UTF_8);
+        return new String(input, prefix.length, input.length - prefix.length, StandardCharsets.UTF_8);
     }
 
     /**

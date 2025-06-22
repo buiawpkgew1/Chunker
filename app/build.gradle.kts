@@ -10,8 +10,8 @@ dependencies {
 }
 
 node {
-    version.set("22.9.0")
-    npmVersion.set("10.9.0")
+    version.set("24.1.0")
+    npmVersion.set("11.4.1")
     download.set(true)
 }
 
@@ -55,7 +55,7 @@ tasks.register<NpmTask>("build") {
         copy {
             from(layout.projectDirectory.dir("electron").dir("dist"))
             into(rootProject.projectDir.resolve("build").resolve("libs").resolve(buildType))
-            include("chunker*", "Chunker*")
+            include("chunker*", "Chunker*", "*-unpacked/**")
         }
     }
 }

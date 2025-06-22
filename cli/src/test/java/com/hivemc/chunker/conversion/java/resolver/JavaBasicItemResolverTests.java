@@ -35,6 +35,7 @@ import com.hivemc.chunker.conversion.intermediate.column.chunk.itemstack.trim.Ch
 import com.hivemc.chunker.conversion.intermediate.column.chunk.itemstack.trim.ChunkerTrimPattern;
 import com.hivemc.chunker.conversion.intermediate.column.entity.Entity;
 import com.hivemc.chunker.conversion.intermediate.column.entity.PaintingEntity;
+import com.hivemc.chunker.conversion.intermediate.column.entity.type.ChunkerEntityType;
 import com.hivemc.chunker.conversion.intermediate.column.entity.type.ChunkerVanillaEntityType;
 import com.hivemc.chunker.conversion.intermediate.level.ChunkerLevel;
 import com.hivemc.chunker.conversion.intermediate.level.map.ChunkerMap;
@@ -76,6 +77,7 @@ public class JavaBasicItemResolverTests {
                     // Added in newer than 1.20.4
                     ChunkerVanillaEntityType.ARMADILLO,
                     ChunkerVanillaEntityType.BOGGED,
+                    ChunkerVanillaEntityType.OMINOUS_ITEM_SPAWNER,
                     ChunkerVanillaEntityType.BREEZE,
                     ChunkerVanillaEntityType.WIND_CHARGE,
                     ChunkerVanillaEntityType.BREEZE_WIND_CHARGE_PROJECTILE,
@@ -100,7 +102,11 @@ public class JavaBasicItemResolverTests {
                     ChunkerVanillaEntityType.DARK_OAK_CHEST_BOAT,
                     ChunkerVanillaEntityType.PALE_OAK_CHEST_BOAT,
                     ChunkerVanillaEntityType.MANGROVE_CHEST_BOAT,
-                    ChunkerVanillaEntityType.BAMBOO_CHEST_RAFT
+                    ChunkerVanillaEntityType.BAMBOO_CHEST_RAFT,
+
+                    // 1.21.6
+                    ChunkerVanillaEntityType.HAPPY_GHAST
+
             ),
             ChunkerPotionType.class, Set.of(
                     ChunkerPotionType.EMPTY,
@@ -129,6 +135,9 @@ public class JavaBasicItemResolverTests {
                     ChunkerEffectType.OOZING,
                     ChunkerEffectType.INFESTED,
                     ChunkerEffectType.RAID_OMEN
+            ),
+            ChunkerTrimMaterial.class, Set.of(
+                    ChunkerTrimMaterial.RESIN
             )
     );
     public static final JavaDataVersion VERSION = JavaDataVersion.V1_20_4;
@@ -145,6 +154,7 @@ public class JavaBasicItemResolverTests {
                     0,
                     true,
                     true,
+                    null,
                     null
             ),
             new ChunkerMap(
@@ -158,6 +168,7 @@ public class JavaBasicItemResolverTests {
                     0,
                     true,
                     true,
+                    null,
                     null
             )
 
@@ -256,6 +267,8 @@ public class JavaBasicItemResolverTests {
             ).toArray();
         } else if (asClass.equals(ChunkerItemType.class)) {
             return generatePropertyValues(ChunkerVanillaItemType.class, property);
+        } else if (asClass.equals(ChunkerEntityType.class)) {
+            return generatePropertyValues(ChunkerVanillaEntityType.class, property);
         } else if (asClass.equals(ChunkerItemDisplay.class)) {
             return (T[]) new ChunkerItemDisplay[]{
                     new ChunkerItemDisplay(JsonTextUtil.fromText("Hi"), null, null),

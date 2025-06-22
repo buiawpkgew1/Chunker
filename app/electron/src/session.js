@@ -1,4 +1,5 @@
 import {spawn} from "child_process"
+import {freemem, totalmem} from "os"
 import {app} from "electron"
 import path from "path"
 import fs from "fs-extra"
@@ -29,7 +30,7 @@ export class Session {
     _asyncResponseMappers = {};
 
     // Constructor
-    constructor(sessions, sessionID, window, webContents) {
+    constructor(sessions, sessionID, window, webContents, javaOptions) {
         this._sessions = sessions;
         this._sessionID = sessionID;
         this._window = window;
@@ -66,12 +67,49 @@ export class Session {
             executable = path.join(cliDirectory, files[0].name);
         }
 
+        // Attach JVM options (calculate memory if not set)
+        if (javaOptions.indexOf("-Xm") === -1) {
+            let maximumMB;
+            if (process.platform !== "darwin") {
+                // Use 75% of available memory (but ensure there is at least 1024MB free for the system)
+                const freeMemoryMB = freemem() / (1024 * 1024);
+                const desiredMB = freeMemoryMB * 0.75;
+
+                // Ensure we leave at least 1GB free in memory for the system
+                const reservedMB = 1024;
+
+                // Ensure the VM gets at least 512MB of ram
+                const requiredMB = 512;
+                maximumMB = Math.max(Math.min(freeMemoryMB - reservedMB, desiredMB), requiredMB);
+            } else {
+                // Use 75% of total memory (but ensure there is 4096MB free for the system on mac)
+                // Note: This is because on MacOS freemem() can be lower due to file caching etc
+                const totalMemoryMB = totalmem() / (1024 * 1024);
+
+                // Ensure the VM gets at least 512MB of ram
+                const requiredMB = 512;
+                maximumMB = Math.max(Math.min(totalMemoryMB - 4096, totalMemoryMB * 0.75), requiredMB);
+            }
+
+            let generatedOptions = "-Xmx" + Math.floor(maximumMB) + "M";
+            javaOptions = javaOptions + (javaOptions.length > 0 ? " " : "") + generatedOptions;
+        }
 
         // Execute as process or a jar
         if (executable.endsWith(".jar")) {
-            this._process = spawn("java", ["-jar", executable, "messenger"]);
+            this._process = spawn("java", ["-jar", executable, "messenger"], {
+                env: {
+                    ...process.env,
+                    _JAVA_OPTIONS: javaOptions
+                }
+            });
         } else {
-            this._process = spawn(executable, ["messenger"]);
+            this._process = spawn(executable, ["messenger"], {
+                env: {
+                    ...process.env,
+                    _JAVA_OPTIONS: javaOptions
+                }
+            });
         }
 
         let buffer = "";
@@ -113,7 +151,13 @@ export class Session {
         });
         this._process.stderr.on("data", (data) => {
             let value = data.toString().trim();
-            log.error(`Error from process: ${value}`)
+
+            // Ensure the JVM indicating what options it has is info and not an error
+            if (value.startsWith("Picked up")) {
+                log.info(`Info from process: ${value}`)
+            } else {
+                log.error(`Error from process: ${value}`)
+            }
         });
         this._process.on("close", (code) => {
             // Close the session
@@ -281,7 +325,8 @@ export class Session {
                 this.sendMessage({
                     requestId: requestId,
                     type: "error",
-                    error: "Failed to save file."
+                    error: "Failed to save file.",
+                    stackTrace: e.stack.toString() + "\n"
                 });
                 responded = true;
             }
@@ -415,11 +460,23 @@ export class Session {
             } catch (e) {
                 log.error("Failed to read input zip", e);
 
+                // Specific handling for file too large
+                if (e.code === "ERR_FS_FILE_TOO_LARGE") {
+                    this.sendMessage({
+                        requestId: requestId,
+                        type: "error",
+                        error: "This zip file is too large to open, please unzip the file and try opening it as a folder.",
+                        stackTrace: e.stack.toString() + "\n"
+                    });
+                    return;
+                }
+
                 // Reply with error
                 this.sendMessage({
                     requestId: requestId,
                     type: "error",
-                    error: "Failed to open selected file."
+                    error: "Failed to open selected file, please ensure you don't have it open anywhere else.",
+                    stackTrace: e.stack.toString() + "\n"
                 });
                 return;
             }
@@ -428,23 +485,36 @@ export class Session {
             let totalFiles = await countFiles(inputPath);
             let filesCopied = 0;
             let lastProgress = 0;
-            await copyRecursive(inputPath, worldInputPath, (file) => {
-                // Update progress
-                filesCopied++;
-                let progress = filesCopied / totalFiles;
+            try {
+                await copyRecursive(inputPath, worldInputPath, (file) => {
+                    // Update progress
+                    filesCopied++;
+                    let progress = filesCopied / totalFiles;
 
-                // Only update the client if the progress differs by 1%
-                if (progress - lastProgress > 0.01) {
-                    // Update client
-                    this.sendMessage({
-                        requestId: requestId,
-                        type: "progress",
-                        percentage: progress,
-                        continue: true
-                    });
-                    lastProgress = progress;
-                }
-            });
+                    // Only update the client if the progress differs by 1%
+                    if (progress - lastProgress > 0.01) {
+                        // Update client
+                        this.sendMessage({
+                            requestId: requestId,
+                            type: "progress",
+                            percentage: progress,
+                            continue: true
+                        });
+                        lastProgress = progress;
+                    }
+                });
+            } catch (e) {
+                log.error("Failed to read input directory", e);
+
+                // Reply with error
+                this.sendMessage({
+                    requestId: requestId,
+                    type: "error",
+                    error: "Failed to open selected folder, please ensure you don't have it open anywhere else.",
+                    stackTrace: e.stack.toString() + "\n"
+                });
+                return;
+            }
         } else {
             // Failed
             log.error("Failed to find input", inputPath);
@@ -491,7 +561,8 @@ export class Session {
                     this.sendMessage({
                         requestId: requestId,
                         type: "error",
-                        error: "Failed to parse " + file.name + " as preloaded data."
+                        error: "Failed to parse " + file.name + " as preloaded data.",
+                        stackTrace: err.stack.toString() + "\n"
                     });
                     return;
                 }
@@ -589,7 +660,34 @@ export class Session {
         await fs.mkdir(worldOutputPath);
 
         if (copyNbt) {
-            await fs.copy(worldInputPath, worldOutputPath);
+            // Copy all the files but exclude level.dat, region, entities, data/map_.dat/idcounts.dat
+            await fs.copy(worldInputPath, worldOutputPath, {
+                filter: (src) => {
+                    let relativePath = path.relative(worldInputPath, src);
+                    let parts = relativePath.split(path.sep);
+
+                    // Don't include any block data / entities (these are passed through Chunker)
+                    if (parts.includes("region") || parts.includes("entities")) {
+                        return false;
+                    }
+
+                    // Don't include in-game map data
+                    if (parts.includes("data") && parts.length === 2) {
+                        let fileName = parts[1];
+                        if (fileName === "idcounts.dat" || fileName.startsWith("map_") && fileName.endsWith(".dat")) {
+                            return false;
+                        }
+                    }
+
+                    // Don't include level.dat / session.lock
+                    if (parts.length === 1 && (parts[0] === "level.dat" || parts[0] === "session.lock")) {
+                        return false;
+                    }
+
+                    // Otherwise include the file
+                    return true;
+                }
+            });
         }
 
         // Process request
@@ -633,7 +731,12 @@ export class Session {
             try {
                 // Use the user provided file name
                 let outputFileName = (this._finalName ?? "output").replaceAll(/[^A-Za-z0-9_\-@]/g, "_");
-                if (outputFileName.length === 0) {
+
+                // Ensure that there are not too many underscores from replacement
+                outputFileName = outputFileName.replace(/_{2,}/g, '_');
+
+                // If the filename is empty or over 128 characters use "output"
+                if (outputFileName.length === 0 || outputFileName.length >= 128) {
                     outputFileName = "output";
                 }
                 outputFileName = outputFileName + (outputType.startsWith("BEDROCK") ? ".mcworld" : ".zip");
@@ -651,7 +754,8 @@ export class Session {
                 return {
                     requestId: response.requestId,
                     type: "error",
-                    error: "Failed to create output ZIP."
+                    error: "Failed to create output ZIP.",
+                    stackTrace: e.stack.toString() + "\n"
                 };
             }
         });
